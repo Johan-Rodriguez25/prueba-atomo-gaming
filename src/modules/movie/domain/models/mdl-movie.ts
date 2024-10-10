@@ -3,7 +3,7 @@ export interface Movie {
   nombre: string;
   resumen: string;
   rating: number;
-  categoria: string;
+  categorias: string[];
   imagen: string;
   isDeleted: boolean;
   created_time: string;

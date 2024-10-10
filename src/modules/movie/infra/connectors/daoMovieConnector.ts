@@ -17,6 +17,24 @@ export class DaoMovieConnector {
     return this.daoMovieRepository.getMovieById(id);
   }
 
+  public async getMoviesByCategory(
+    categorias: string[],
+    sort: {},
+    skip = 0,
+    limit = 25
+  ) {
+    return this.daoMovieRepository.getMoviesByCategory(
+      categorias,
+      sort,
+      skip,
+      limit
+    );
+  }
+
+  public async getMoviesByRating(rating: number, skip = 0, limit = 25) {
+    return this.daoMovieRepository.getMoviesByRating(rating, skip, limit);
+  }
+
   public async updateMovie(id: string, data: Partial<Movie>) {
     return this.daoMovieRepository.updateMovie(id, data);
   }

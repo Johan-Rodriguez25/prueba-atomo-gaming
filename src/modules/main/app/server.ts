@@ -66,7 +66,7 @@ class Server {
         this.MongoWriteConnection.statusConnection.pipe(
           catchError((error) => {
             console.error("Error in MongoDB Write Connection:", error);
-            return of(false); // Emitir 'false' en caso de error
+            return of(false);
           })
         )
       );

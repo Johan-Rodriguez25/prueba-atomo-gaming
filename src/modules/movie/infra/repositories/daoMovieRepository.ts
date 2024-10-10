@@ -10,7 +10,7 @@ export class DaoMovieRepository {
   private collectionName = DbCollections.movies;
 
   public async getAllMovies(
-    sort = {},
+    sort: {},
     skip = 0,
     limit = 25
   ): Promise<
@@ -65,6 +65,7 @@ export class DaoMovieRepository {
         .insertOne({
           ...movie,
           _id: undefined,
+          isDeleted: false,
         })
         .then();
     } catch (error) {
@@ -86,6 +87,109 @@ export class DaoMovieRepository {
       const _error = error as Error;
       throw new Error(
         `${_error.message} in DaoMovieRepository of getMovieById() method`
+      );
+    }
+  }
+
+  public async getMoviesByCategory(
+    categorias: string[],
+    sort = {},
+    skip = 0,
+    limit = 25
+  ): Promise<
+    {
+      count: number;
+      movies: Movie[];
+    }[]
+  > {
+    try {
+      const filter = {
+        categorias: { $in: categorias },
+        isDeleted: { $ne: true },
+      };
+
+      const aggregate: any[] = [
+        { $match: filter },
+        {
+          $facet: {
+            count: [{ $count: "count" }],
+            movies: [{ $skip: skip }, { $limit: limit }],
+          },
+        },
+        {
+          $unwind: {
+            path: "$count",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        { $addFields: { count: "$count.count" } },
+      ];
+
+      if (Object.keys(sort).length > 0) {
+        aggregate.unshift({
+          $sort: sort,
+        });
+      }
+
+      return this.mongoReadConnection.client
+        .db(DataBaseName.core)
+        .collection(this.collectionName)
+        .aggregate(aggregate)
+        .toArray()
+        .then();
+    } catch (error) {
+      const _error = error as Error;
+
+      throw new Error(
+        `${_error.message} in DaoMovieRepository of getMoviesByCategory() method`
+      );
+    }
+  }
+
+  public async getMoviesByRating(
+    rating: number,
+    skip = 0,
+    limit = 25
+  ): Promise<
+    {
+      count: number;
+      movies: Movie[];
+    }[]
+  > {
+    try {
+      const filter = {
+        rating: { $gte: rating },
+        isDeleted: { $ne: true },
+      };
+
+      const aggregate: any[] = [
+        { $match: filter },
+        {
+          $facet: {
+            count: [{ $count: "count" }],
+            movies: [{ $skip: skip }, { $limit: limit }],
+          },
+        },
+        {
+          $unwind: {
+            path: "$count",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        { $addFields: { count: "$count.count" } },
+      ];
+
+      return this.mongoReadConnection.client
+        .db(DataBaseName.core)
+        .collection(this.collectionName)
+        .aggregate(aggregate)
+        .toArray()
+        .then();
+    } catch (error) {
+      const _error = error as Error;
+
+      throw new Error(
+        `${_error.message} in DaoMovieRepository of getMoviesByRating() method`
       );
     }
   }
