@@ -25,9 +25,26 @@ export class MovieRoutes {
       }
     );
 
-    router.get("/all", (req: Request, res: Response, next: NextFunction) => {
-      _getMovieController.getAllMovies(req, res).catch(next);
-    });
+    router.post(
+      "/data/all",
+      (req: Request, res: Response, next: NextFunction) => {
+        _getMovieController.getAllMovies(req, res).catch(next);
+      }
+    );
+
+    router.post(
+      "/data/all/category",
+      (req: Request, res: Response, next: NextFunction) => {
+        _getMovieController.getMoviesByCategory(req, res).catch(next);
+      }
+    );
+
+    router.post(
+      "/data/all/rating",
+      (req: Request, res: Response, next: NextFunction) => {
+        _getMovieController.getMoviesByRating(req, res).catch(next);
+      }
+    );
 
     router.get(
       "/data/:movieId",

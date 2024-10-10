@@ -20,11 +20,44 @@ class GetMovieController {
     }
   }
 
+  public async getMoviesByCategory(req: Request, res: Response) {
+    try {
+      const { body } = req;
+      const { categorias, sort, skip, limit } = body;
+      const result = await this.getMovieService.getMoviesByCategory(
+        categorias,
+        sort,
+        skip,
+        limit
+      );
+
+      return this.responseExpress.successResponse(res, result);
+    } catch (error) {
+      return this.responseExpress.errorResponse(res, error as Error);
+    }
+  }
+
+  public async getMoviesByRating(req: Request, res: Response) {
+    try {
+      const { body } = req;
+      const { rating, skip, limit } = body;
+      const result = await this.getMovieService.getMoviesByRating(
+        rating,
+        skip,
+        limit
+      );
+
+      return this.responseExpress.successResponse(res, result);
+    } catch (error) {
+      return this.responseExpress.errorResponse(res, error as Error);
+    }
+  }
+
   public async getAllMovies(req: Request, res: Response) {
     try {
       const { body } = req;
-      const { sort, limit, skip } = body;
-      const result = await this.getMovieService.getAllMovies(sort, limit, skip);
+      const { sort, skip, limit } = body;
+      const result = await this.getMovieService.getAllMovies(sort, skip, limit);
 
       return this.responseExpress.successResponse(res, result);
     } catch (error) {
