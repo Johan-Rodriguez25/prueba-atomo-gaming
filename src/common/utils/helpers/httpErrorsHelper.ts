@@ -20,7 +20,6 @@ export function getHttpErrorClassArgs(
 }
 
 export function httpErrorResponse(error: any, res: Response) {
-  // Custom error
   if (error instanceof HttpError) {
     console.error(
       JSON.stringify({ ...error, message: error.message }, null, 2)
@@ -35,7 +34,6 @@ export function httpErrorResponse(error: any, res: Response) {
     return res.status(error.httpStatus).json(response);
   }
 
-  // Internal server error
   const response: HttpErrorResponse = {
     ok: false,
     message: error.message || "Internal server error",

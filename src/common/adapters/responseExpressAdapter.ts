@@ -24,15 +24,5 @@ class ResponseExpress {
 
     return res.status(400).json(errorMessage);
   }
-
-  authErrorResponse(res: Response, data: Error) {
-    console.log("AuthError:", data);
-    return res.status(401).json({
-      error: data.message,
-      name: data.name,
-      stack: data?.stack,
-      ok: false,
-    });
-  }
 }
 export default ResponseExpress;
