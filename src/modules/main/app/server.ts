@@ -5,6 +5,7 @@ import cors from "cors";
 import dotenvFlow from "dotenv-flow";
 import morgan from "morgan";
 import helmet from "helmet";
+import fileUpload from "express-fileupload";
 import { Observable, catchError, firstValueFrom, of } from "rxjs";
 
 import MongoReadConnection from "../../../common/config/configMongoReadConnection";
@@ -12,6 +13,7 @@ import MongoWriteConnection from "../../../common/config/configMongoWriteConnect
 import { ParalellQueueAdapter } from "../../../common/adapters/paralellQueueAdapter";
 
 import { MovieRoutes } from "../../movie/infra/http/apiMovie.routes";
+import { UploadPosterRoutes } from "../../poster/infra/http/apiUploadPoster.routes";
 
 dotenvFlow.config({
   silent: true,
@@ -25,6 +27,7 @@ class Server {
   public MongoWriteConnection!: MongoWriteConnection;
   private apiPath = {
     movies: "/v1/api/movies",
+    uploadPoster: "/v1/api/upload/poster",
   };
 
   private constructor() {
@@ -88,6 +91,12 @@ class Server {
   private middlewares(): void {
     this.app.use(cors());
     this.app.use(
+      fileUpload({
+        useTempFiles: true,
+        tempFileDir: "/tmp/",
+      })
+    );
+    this.app.use(
       express.urlencoded({
         limit: "6mb",
         extended: true,
@@ -102,6 +111,7 @@ class Server {
 
   private routes(): void {
     this.app.use(this.apiPath.movies, MovieRoutes.routes);
+    this.app.use(this.apiPath.uploadPoster, UploadPosterRoutes.routes);
     this.app.get("/", (req: any, res: any) =>
       res.status(200).json({ ok: true })
     );
