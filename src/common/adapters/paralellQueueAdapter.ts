@@ -3,20 +3,15 @@ import { Subject, Observable } from "rxjs";
 
 export class ParalellQueueAdapter<T> {
   private queue!: Queue;
-  private tasks: Promise<T>[];
-  public resolver: T[] = [];
+  private tasks: Observable<T>[];
   private concurrent: number = 20;
   private maxTimeout: number = 20000;
-  // status queue
   private _statusFinishTasks = new Subject<boolean>();
   public statusFinishTasks: Observable<boolean>;
-  // get result for queue
   private _resultWorker = new Subject<any | T>();
   public resultWorker: Observable<T>;
-  // get result finish queue task
-  public results: any[] = [];
 
-  constructor(tasks: Promise<T>[], concurrent: number, maxTimeout: number) {
+  constructor(tasks: Observable<T>[], concurrent: number, maxTimeout: number) {
     this.concurrent = concurrent;
     this.maxTimeout = maxTimeout;
     this.statusFinishTasks = this._statusFinishTasks.asObservable();
@@ -28,9 +23,10 @@ export class ParalellQueueAdapter<T> {
 
   private createWorkQueue() {
     this.queue = new Queue(
-      async (task: Promise<T>, callback) => {
+      async (task: Observable<T>, callback) => {
         try {
-          const result = await task;
+          const result = await task.toPromise();
+
           if (result instanceof Error) {
             callback(result, null);
           } else {
@@ -76,8 +72,6 @@ export class ParalellQueueAdapter<T> {
           this.setErrorWorker(error);
           this.setErrorFinishTasks(error);
         } else {
-          this.results.push(result);
-          this.resolver.push(result);
           this.setResultWorker(result);
         }
       });

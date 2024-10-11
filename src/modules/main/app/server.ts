@@ -4,11 +4,16 @@ import compression from "compression";
 import cors from "cors";
 import dotenvFlow from "dotenv-flow";
 import morgan from "morgan";
-import { firstValueFrom } from "rxjs";
+import helmet from "helmet";
+import fileUpload from "express-fileupload";
+import { Observable, catchError, firstValueFrom, of } from "rxjs";
 
 import MongoReadConnection from "../../../common/config/configMongoReadConnection";
 import MongoWriteConnection from "../../../common/config/configMongoWriteConnection";
 import { ParalellQueueAdapter } from "../../../common/adapters/paralellQueueAdapter";
+
+import { MovieRoutes } from "../../movie/infra/http/apiMovie.routes";
+import { UploadPosterRoutes } from "../../poster/infra/http/apiUploadPoster.routes";
 
 dotenvFlow.config({
   silent: true,
@@ -20,7 +25,10 @@ class Server {
   public app: Application;
   public MongoReadConnection!: MongoReadConnection;
   public MongoWriteConnection!: MongoWriteConnection;
-  // private apiPath = {}
+  private apiPath = {
+    movies: "/v1/api/movies",
+    uploadPoster: "/v1/api/upload/poster",
+  };
 
   private constructor() {
     this.app = express();
@@ -48,12 +56,22 @@ class Server {
 
   private async listenStatusConnection() {
     try {
-      const mongoConnections: Promise<any>[] = [];
+      const mongoConnections: Observable<boolean | undefined>[] = [];
       mongoConnections.push(
-        this.MongoReadConnection.statusConnection.toPromise()
+        this.MongoReadConnection.statusConnection.pipe(
+          catchError((error) => {
+            console.error("Error in MongoDB Read Connection:", error);
+            return of(false);
+          })
+        )
       );
       mongoConnections.push(
-        this.MongoWriteConnection.statusConnection.toPromise()
+        this.MongoWriteConnection.statusConnection.pipe(
+          catchError((error) => {
+            console.error("Error in MongoDB Write Connection:", error);
+            return of(false);
+          })
+        )
       );
       const paralellQueueAdapter = new ParalellQueueAdapter(
         mongoConnections,
@@ -72,12 +90,28 @@ class Server {
 
   private middlewares(): void {
     this.app.use(cors());
-    this.app.use(express.json({ limit: "10mb" }));
+    this.app.use(
+      fileUpload({
+        useTempFiles: true,
+        tempFileDir: "/tmp/",
+      })
+    );
+    this.app.use(
+      express.urlencoded({
+        limit: "6mb",
+        extended: true,
+        parameterLimit: 60000,
+      })
+    );
+    this.app.use(express.json({ limit: "6mb" }));
     this.app.use(morgan("dev"));
+    this.app.use(helmet());
     this.app.use(compression({ level: 9 }));
   }
 
   private routes(): void {
+    this.app.use(this.apiPath.movies, MovieRoutes.routes);
+    this.app.use(this.apiPath.uploadPoster, UploadPosterRoutes.routes);
     this.app.get("/", (req: any, res: any) =>
       res.status(200).json({ ok: true })
     );
